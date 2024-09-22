@@ -2,21 +2,22 @@
 namespace WeDevs\ORM\Eloquent;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use Illuminate\Database\Query\Builder;
 
 /**
  * Model Class
  *
  * @package WeDevs\ERP\Framework
  */
-abstract class Model extends Eloquent {
-
+abstract class Model extends Eloquent
+{
     /**
      * @param array $attributes
      */
-    public function __construct( array $attributes = array() ) {
+    public function __construct(array $attributes = [])
+    {
         static::$resolver = new Resolver();
-
-        parent::__construct( $attributes );
+        parent::__construct($attributes);
     }
 
     /**
@@ -24,8 +25,20 @@ abstract class Model extends Eloquent {
      *
      * @return Database
      */
-    public function getConnection() {
-        return Database::instance();
+    public function getConnection()
+    {
+        return static::resolveConnection($this->connection);
+    }
+
+    /**
+     * Resolve a connection instance.
+     *
+     * @param  string  $connection
+     * @return Database
+     */
+    public static function resolveConnection($connection = null)
+    {
+        return static::$resolver->connection($connection);
     }
 
     /**
@@ -36,12 +49,13 @@ abstract class Model extends Eloquent {
      *
      * @return string
      */
-    public function getTable() {
-        if ( isset( $this->table ) ) {
+    public function getTable()
+    {
+        if (isset($this->table)) {
             return $this->table;
         }
 
-        $table = str_replace( '\\', '', snake_case( str_plural( class_basename( $this ) ) ) );
+        $table = str_replace( '\\', '', snake_case(str_plural(class_basename($this))));
 
         return $this->getConnection()->db->prefix . $table ;
     }

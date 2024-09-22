@@ -2,6 +2,7 @@
 namespace WeDevs\ORM\Eloquent;
 
 use Illuminate\Database\ConnectionInterface;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Database\Query\Processors\Processor;
 use Illuminate\Database\Query\Expression;
@@ -11,6 +12,11 @@ use Illuminate\Support\Arr;
 class Database implements ConnectionInterface
 {
 
+    /**
+     * The active database connection instance.
+     *
+     * @var \wpdb
+     */
     public $db;
 
     /**
@@ -30,30 +36,25 @@ class Database implements ConnectionInterface
     /**
      * Initializes the Database class
      *
+     * @param \wpdb $connection
      * @return \WeDevs\ORM\Eloquent\Database
      */
-    public static function instance()
+    public static function instance($connection)
     {
         static $instance = false;
 
         if (!$instance) {
-            $instance = new self();
+            $instance = new self($connection);
         }
 
         return $instance;
     }
 
     /**
-     * [__construct description]
+     * @param \wpdb $connection
      */
-    public function __construct()
-    {
-        global $wpdb;
-
-        $this->config = [
-            'name' => 'wp-eloquent-mysql2',
-        ];
-        $this->db = $wpdb;
+    public function __construct($connection) {
+        $this->db = $connection;
     }
 
     /**
@@ -96,17 +97,17 @@ class Database implements ConnectionInterface
         return new Expression($value);
     }
 
-	/**
-	 * Get a new query builder instance.
-	 *
-	 * @return \Illuminate\Database\Query\Builder
-	 */
-	public function query()
-	{
-		return new Builder(
-			$this, $this->getQueryGrammar(), $this->getPostProcessor()
-		);
-	}
+    /**
+     * Get a new query builder instance.
+     *
+     * @return \Illuminate\Database\Query\Builder
+     */
+    public function query()
+    {
+        return new Builder(
+            $this, $this->getQueryGrammar(), $this->getPostProcessor()
+        );
+    }
 
     /**
      * Run a select statement and return a single result.
@@ -176,7 +177,6 @@ class Database implements ConnectionInterface
      */
     private function bind_params($query, $bindings, $update = false)
     {
-
         $query = str_replace('"', '`', $query);
         $bindings = $this->prepareBindings($bindings);
 
